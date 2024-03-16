@@ -1,5 +1,6 @@
 package br.com.FinnTech.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Conta {
@@ -12,6 +13,16 @@ public class Conta {
     private List<Pagamento> extrato;
 
     public Conta() {
+    }
+
+    public Conta(Integer id, Cliente cliente, Integer tipo, Double saldo, Double limite, String banco) {
+        this.id = id;
+        this.cliente = cliente;
+        this.tipo = tipo;
+        this.saldo = saldo;
+        this.limite = limite;
+        this.banco = banco;
+        this.extrato = new ArrayList<Pagamento>();
     }
 
     public Integer getId() {
