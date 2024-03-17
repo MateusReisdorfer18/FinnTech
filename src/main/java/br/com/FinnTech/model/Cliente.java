@@ -50,11 +50,11 @@ public class Cliente {
         this.cpf = cpf;
     }
 
-    public List<Conta> getExtrato() {
+    public List<Conta> getContas() {
         return this.contas;
     }
 
-    public void setExtrato(List<Conta> extrato) {
+    public void setContas(List<Conta> extrato) {
         this.contas = extrato;
     }
 }
