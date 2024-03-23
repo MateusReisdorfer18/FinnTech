@@ -1,42 +1,52 @@
 package br.com.FinnTech.DAO;
 
-import br.com.FinnTech.model.Banco;
+import br.com.FinnTech.controller.ContaController;
+import br.com.FinnTech.model.Conta;
+import br.com.FinnTech.model.Pagamento;
 import br.com.FinnTech.util.ConnectionFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BancoDAOimpl implements GenericDAO {
+public class PagamentoDAOimpl implements GenericDAO {
     private Connection conn;
-
-    public BancoDAOimpl() {
+    private ContaController contaController = new ContaController();
+    public PagamentoDAOimpl() {
         try {
             this.conn = ConnectionFactory.getConnection();
         } catch (Exception e) {
             System.out.println("Problemas na DAO ao conectar no banco");
+            e.printStackTrace();
         }
     }
+
 
     @Override
     public List<Object> listarTodos() {
         List<Object> lista = new ArrayList<>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        String query = "SELECT * FROM banco";
+        String query = "SELECT * FROM pagamento";
 
         try {
             stmt = this.conn.prepareStatement(query);
             rs = stmt.executeQuery();
 
             while(rs.next()) {
-                Banco banco = new Banco();
-                banco.setId(rs.getInt("id"));
-                banco.setNome(rs.getString("nome"));
-                lista.add(banco);
+                Pagamento pagamento = new Pagamento();
+                pagamento.setId(rs.getInt("id"));
+                pagamento.setTipo(rs.getInt("tipo"));
+                Conta destinatario = contaController.buscarPorId(rs.getInt("destinatario"));
+                pagamento.setDestinatario(destinatario);
+                Conta remetente = contaController.buscarPorId(rs.getInt("remetente"));
+                pagamento.setRemetente(remetente);
+                pagamento.setValor(rs.getDouble("valor"));
+
+                lista.add(pagamento);
             }
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao listar todos os bancos");
+            System.out.println("Problemas na DAO ao listar todos os pagamentos");
             e.printStackTrace();
         } finally {
             this.fecharConexao(this.conn, stmt, rs);
@@ -47,10 +57,10 @@ public class BancoDAOimpl implements GenericDAO {
 
     @Override
     public Object buscarPorId(Integer id) {
-        Banco banco = new Banco();
+        Pagamento pagamento = new Pagamento();
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        String query = "SELECT * FROM banco WHERE id=?";
+        String query = "SELECT * FROM pagamento WHERE id=?";
 
         try {
             stmt = this.conn.prepareStatement(query);
@@ -58,31 +68,39 @@ public class BancoDAOimpl implements GenericDAO {
             rs = stmt.executeQuery();
 
             if(rs.next()) {
-                banco.setId(rs.getInt("id"));
-                banco.setNome(rs.getString("nome"));
+                pagamento.setId(rs.getInt("id"));
+                pagamento.setTipo(rs.getInt("tipo"));
+                Conta destinatario = contaController.buscarPorId(rs.getInt("destinatario"));
+                pagamento.setDestinatario(destinatario);
+                Conta remetente = contaController.buscarPorId(rs.getInt("remetente"));
+                pagamento.setRemetente(remetente);
+                pagamento.setValor(rs.getDouble("valor"));
             }
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao buscar banco pelo id");
+            System.out.println("Problemas na DAO ao buscar pagamento pelo id");
             e.printStackTrace();
         } finally {
             this.fecharConexao(this.conn, stmt, rs);
         }
 
-        return banco;
+        return pagamento;
     }
 
     @Override
     public boolean criar(Object objeto) {
         PreparedStatement stmt = null;
-        String query = "INSER INTO banco(nome) VALUES(?)";
+        String query = "INSERT INTO pagamento(tipo, remetente, destinatario, valor) Values(?, ?, ?, ?)";
 
         try {
             stmt = this.conn.prepareStatement(query);
-            Banco banco = (Banco) objeto;
-            stmt.setString(1, banco.getNome());
+            Pagamento pagamento = (Pagamento) objeto;
+            stmt.setInt(1, pagamento.getTipo());
+            stmt.setInt(2, pagamento.getRemetente().getId());
+            stmt.setInt(3, pagamento.getDestinatario().getId());
+            stmt.setDouble(4, pagamento.getValor());
             stmt.execute();
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao cadastrar banco");
+            System.out.println("Problemas na DAO ao cadastrar pagamento");
             e.printStackTrace();
             return false;
         } finally {
@@ -95,16 +113,18 @@ public class BancoDAOimpl implements GenericDAO {
     @Override
     public boolean alterar(Object objeto) {
         PreparedStatement stmt = null;
-        String query = "UPDATE banco SET nome=? WHERE id=?";
+        String query = "UPDATE pagamento SET tipo=?, remetente=?, destinatario=?, valor=? WHERE id=?";
 
         try {
             stmt = this.conn.prepareStatement(query);
-            Banco banco = (Banco) objeto;
-            stmt.setString(1, banco.getNome());
-            stmt.setInt(2, banco.getId());
+            Pagamento pagamento = (Pagamento) objeto;
+            stmt.setInt(1, pagamento.getTipo());
+            stmt.setInt(2, pagamento.getRemetente().getId());
+            stmt.setInt(3, pagamento.getDestinatario().getId());
+            stmt.setDouble(4, pagamento.getValor());
             stmt.execute();
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao editar banco");
+            System.out.println("Problemas na DAO ao editar pagamento");
             e.printStackTrace();
             return false;
         } finally {
@@ -117,14 +137,14 @@ public class BancoDAOimpl implements GenericDAO {
     @Override
     public boolean excluir(Integer id) {
         PreparedStatement stmt = null;
-        String query = "DELETE FROM banco WHERE id=?";
+        String query = "DELETE FROM pagamento WHERE id=?";
 
         try {
             stmt = this.conn.prepareStatement(query);
             stmt.setInt(1, id);
             stmt.execute();
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao excluir banco");
+            System.out.println("Problemas na DAO ao excluir pagamento");
             e.printStackTrace();
             return false;
         } finally {

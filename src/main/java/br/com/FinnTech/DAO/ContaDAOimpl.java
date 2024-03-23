@@ -108,7 +108,7 @@ public class ContaDAOimpl implements GenericDAO {
             stmt.setDouble(6, conta.getLimite());
             stmt.execute();
         } catch (SQLException e) {
-            System.out.println("Problemas na DAO ao criar cliente");
+            System.out.println("Problemas na DAO ao criar conta");
             e.printStackTrace();
             return false;
         } finally {
