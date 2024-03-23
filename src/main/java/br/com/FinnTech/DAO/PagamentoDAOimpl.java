@@ -20,8 +20,6 @@ public class PagamentoDAOimpl implements GenericDAO {
             e.printStackTrace();
         }
     }
-
-
     @Override
     public List<Object> listarTodos() {
         List<Object> lista = new ArrayList<>();
