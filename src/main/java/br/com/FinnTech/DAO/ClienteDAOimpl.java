@@ -3,10 +3,7 @@ package br.com.FinnTech.DAO;
 import br.com.FinnTech.model.Cliente;
 import br.com.FinnTech.util.ConnectionFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +25,7 @@ public class ClienteDAOimpl implements GenericDAO {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String query = "SELECT * FROM cliente";
-        List<Object> lista = new ArrayList<Object>();
+        List<Object> lista = new ArrayList<>();
 
         try {
             stmt = this.conn.prepareStatement(query);
@@ -47,12 +44,7 @@ public class ClienteDAOimpl implements GenericDAO {
             e.printStackTrace();
             return null;
         } finally {
-            try {
-                ConnectionFactory.closeConnection(this.conn, stmt, rs);
-            } catch (Exception e) {
-                System.out.println("Problemas na DAO ao fechar conexao");
-                e.printStackTrace();
-            }
+            this.fecharConexao(this.conn, stmt, rs);
         }
 
         return lista;
@@ -60,21 +52,108 @@ public class ClienteDAOimpl implements GenericDAO {
 
     @Override
     public Object buscarPorId(Integer id) {
-        return null;
+        Cliente cliente = new Cliente();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String query = "SELECT * FROM cliente WHERE id = ?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            if(rs.next()) {
+                cliente.setId(rs.getInt("id"));
+                cliente.setNome(rs.getString("nome"));
+                cliente.setEmail(rs.getString("email"));
+                cliente.setCpf(rs.getString("cpf"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao buscar cliente pelo id");
+            e.printStackTrace();
+        } finally {
+            this.fecharConexao(this.conn, stmt, rs);
+        }
+
+        return cliente;
     }
 
     @Override
     public boolean criar(Object objeto) {
-        return false;
+        PreparedStatement stmt = null;
+        String query = "INSERT INTO cliente(nome, email, cpf) VALUES(?, ?, ?)";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            Cliente cliente = (Cliente) objeto;
+            stmt.setString(1, cliente.getNome());
+            stmt.setString(2, cliente.getEmail());
+            stmt.setString(3, cliente.getCpf());
+            stmt.execute();
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao cadastrar cliente");
+            e.printStackTrace();
+            return false;
+        } finally {
+            this.fecharConexao(this.conn, stmt, null);
+        }
+
+        return true;
     }
 
     @Override
     public boolean alterar(Object objeto) {
-        return false;
+        PreparedStatement stmt = null;
+        String query = "UPDATE cliente SET nome=?, email=?, cpf=? WHERE id=?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            Cliente cliente = (Cliente) objeto;
+            stmt.setString(1, cliente.getNome());
+            stmt.setString(2, cliente.getEmail());
+            stmt.setString(3, cliente.getCpf());
+            stmt.setInt(4, cliente.getId());
+            stmt.execute();
+        } catch (Exception e) {
+            System.out.println("Problemas na DAO ao editar cliente");
+            e.printStackTrace();
+            return false;
+        } finally {
+            this.fecharConexao(this.conn, stmt, null);
+        }
+
+        return true;
     }
 
     @Override
     public boolean excluir(Integer id) {
-        return false;
+        PreparedStatement stmt = null;
+        String query = "DELETE FROM cliente WHERE id = ?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            stmt.execute();
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao excluir cliente");
+            e.printStackTrace();
+            return false;
+        } finally {
+            this.fecharConexao(this.conn, stmt, null);
+        }
+
+        return true;
+    }
+
+    private void fecharConexao(Connection conn, Statement stmt, ResultSet rs) {
+        try {
+            if(rs != null)
+                ConnectionFactory.closeConnection(conn, stmt, rs);
+            else
+                ConnectionFactory.closeConnection(conn, stmt);
+        } catch (Exception e) {
+            System.out.println("Problemas na DAO ao fechar conexao");
+            e.printStackTrace();
+        }
     }
 }

@@ -1,5 +1,6 @@
 package br.com.FinnTech.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Cliente {
@@ -10,12 +11,14 @@ public class Cliente {
     private List<Conta> contas;
 
     public Cliente() {
+        this.contas = new ArrayList<>();
     }
 
     public Cliente(String nome, String email, String cpf) {
         this.nome = nome;
         this.email = email;
         this.cpf = cpf;
+        this.contas = new ArrayList<>();
     }
 
     public Integer getId() {
