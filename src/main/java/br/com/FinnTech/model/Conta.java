@@ -10,14 +10,14 @@ public class Conta {
     private Integer tipo;
     private Double saldo;
     private Double limite;
-    private String banco;
+    private Banco banco;
     private List<Pagamento> extrato;
 
     public Conta() {
         this.extrato = new ArrayList<>();
     }
 
-    public Conta(Integer numero, Cliente cliente, Integer tipo, Double saldo, Double limite, String banco) {
+    public Conta(Integer numero, Cliente cliente, Integer tipo, Double saldo, Double limite, Banco banco) {
         this.numero = numero;
         this.cliente = cliente;
         this.tipo = tipo;
@@ -75,11 +75,11 @@ public class Conta {
         this.limite = limite;
     }
 
-    public String getBanco() {
+    public Banco getBanco() {
         return this.banco;
     }
 
-    public void setBanco(String banco) {
+    public void setBanco(Banco banco) {
         this.banco = banco;
     }
 
