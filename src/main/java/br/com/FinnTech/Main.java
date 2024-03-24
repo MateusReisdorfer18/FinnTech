@@ -1,23 +1,36 @@
 package br.com.FinnTech;
 
+import br.com.FinnTech.controller.BancoController;
 import br.com.FinnTech.controller.ClienteController;
-import br.com.FinnTech.model.Cliente;
+import br.com.FinnTech.controller.ContaController;
+import br.com.FinnTech.controller.TipoContaController;
 
-import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-
+        Scanner scan = new Scanner(System.in);
+        ContaController contaController = new ContaController();
         ClienteController clienteController = new ClienteController();
+        TipoContaController tipoContaController = new TipoContaController();
+        BancoController bancoController = new BancoController();
+        int opcao;
 
-        List<Cliente> clientes = clienteController.listarTodos();
+        do {
+            System.out.println("""
+                        Bem vindo! \s
+                        Selecione uma opção \s
+                        [1] Cliente \s
+                        [2] Conta \s
+                        [0] Sair \s
+                    """);
+            opcao = scan.nextInt();
 
-        for(Cliente cliente:clientes) {
-            System.out.println(cliente.getId());
-            System.out.println(cliente.getNome());
-            System.out.println(cliente.getCpf());
-            System.out.println(cliente.getEmail());
-            System.out.println(cliente.getContas());
-        }
+            if(opcao == 1) {
+                clienteController.chamarMenu(scan);
+            } else if (opcao == 2) {
+                contaController.chamarMenu(scan, clienteController, bancoController, tipoContaController);
+            }
+        } while(opcao != 0);
     }
 }

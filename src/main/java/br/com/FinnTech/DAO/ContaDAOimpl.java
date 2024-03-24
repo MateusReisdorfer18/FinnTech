@@ -2,19 +2,23 @@ package br.com.FinnTech.DAO;
 
 import br.com.FinnTech.controller.BancoController;
 import br.com.FinnTech.controller.ClienteController;
+import br.com.FinnTech.controller.TipoContaController;
 import br.com.FinnTech.model.Banco;
 import br.com.FinnTech.model.Cliente;
 import br.com.FinnTech.model.Conta;
+import br.com.FinnTech.model.TipoConta;
 import br.com.FinnTech.util.ConnectionFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class ContaDAOimpl implements GenericDAO {
     private Connection conn;
     private ClienteController clienteController = new ClienteController();
     private BancoController bancoController = new BancoController();
+    private TipoContaController tipoContaController = new TipoContaController();
 
     public ContaDAOimpl() {
         try {
@@ -41,7 +45,8 @@ public class ContaDAOimpl implements GenericDAO {
                 conta.setId(rs.getInt("id"));
                 Cliente cliente = clienteController.buscarPorId(rs.getInt("cliente"));
                 conta.setCliente(cliente);
-                conta.setTipo(rs.getInt("tipo"));
+                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"));
+                conta.setTipo(tipoConta);
                 conta.setNumero(rs.getInt("numero"));
                 Banco banco = bancoController.buscarPorId(rs.getInt("banco"));
                 conta.setBanco(banco);
@@ -75,7 +80,8 @@ public class ContaDAOimpl implements GenericDAO {
                 conta.setId(rs.getInt("id"));
                 Cliente cliente = clienteController.buscarPorId(rs.getInt("cliente"));
                 conta.setCliente(cliente);
-                conta.setTipo(rs.getInt("tipo"));
+                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"))
+                conta.setTipo(tipoConta);
                 conta.setNumero(rs.getInt("numero"));
                 Banco banco = bancoController.buscarPorId(rs.getInt("banco"));
                 conta.setBanco(banco);
@@ -101,8 +107,8 @@ public class ContaDAOimpl implements GenericDAO {
             stmt = this.conn.prepareStatement(query);
             Conta conta = (Conta) objeto;
             stmt.setInt(1, conta.getCliente().getId());
-            stmt.setInt(2, conta.getTipo());
-            stmt.setInt(3, conta.getNumero());
+            stmt.setInt(2, conta.getTipo().getId());
+            stmt.setInt(3, this.gerarNumero());
             stmt.setInt(4, conta.getBanco().getId());
             stmt.setDouble(5, conta.getSaldo());
             stmt.setDouble(6, conta.getLimite());
@@ -121,17 +127,12 @@ public class ContaDAOimpl implements GenericDAO {
     @Override
     public boolean alterar(Object objeto) {
         PreparedStatement stmt = null;
-        String query = "UPDATE conta SET cliente=?, tipo=?, numero=?, banco=?, saldo=?, limite=? WHERE id=?";
+        String query = "UPDATE conta SET tipo=? WHERE id=?";
 
         try {
             stmt = this.conn.prepareStatement(query);
             Conta conta = (Conta) objeto;
-            stmt.setInt(1, conta.getCliente().getId());
-            stmt.setInt(2, conta.getTipo());
-            stmt.setInt(3, conta.getNumero());
-            stmt.setInt(4, conta.getBanco().getId());
-            stmt.setDouble(5, conta.getSaldo());
-            stmt.setDouble(6, conta.getLimite());
+            stmt.setInt(1, conta.getTipo().getId())
             stmt.execute();
         } catch (SQLException e) {
             System.out.println("Problemas na DAO ao editar conta");
@@ -162,6 +163,11 @@ public class ContaDAOimpl implements GenericDAO {
         }
 
         return true;
+    }
+
+    private Integer gerarNumero() {
+        Double numAleatorio = Math.random() * 1000000;
+        return (int) Math.floor(numAleatorio);
     }
 
     private void fecharConexao(Connection conn, Statement stmt, ResultSet rs) {

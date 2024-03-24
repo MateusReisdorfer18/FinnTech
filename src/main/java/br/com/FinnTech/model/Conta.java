@@ -7,7 +7,7 @@ public class Conta {
     private Integer id;
     private Integer numero;
     private Cliente cliente;
-    private Integer tipo;
+    private TipoConta tipo;
     private Double saldo;
     private Double limite;
     private Banco banco;
@@ -17,8 +17,7 @@ public class Conta {
         this.extrato = new ArrayList<>();
     }
 
-    public Conta(Integer numero, Cliente cliente, Integer tipo, Double saldo, Double limite, Banco banco) {
-        this.numero = numero;
+    public Conta(Cliente cliente, TipoConta tipo, Double saldo, Double limite, Banco banco) {
         this.cliente = cliente;
         this.tipo = tipo;
         this.saldo = saldo;
@@ -51,11 +50,11 @@ public class Conta {
         this.cliente = cliente;
     }
 
-    public Integer getTipo() {
+    public TipoConta getTipo() {
         return this.tipo;
     }
 
-    public void setTipo(Integer tipo) {
+    public void setTipo(TipoConta tipo) {
         this.tipo = tipo;
     }
 

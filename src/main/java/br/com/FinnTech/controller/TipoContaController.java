@@ -76,4 +76,13 @@ public class TipoContaController {
             return false;
         }
     }
+
+    public void mostrarTipos() {
+        for(TipoConta tipoConta:this.listarTodos()) {
+            System.out.printf("""
+                        Id: %d \s
+                        Tipo: %s
+                    """, tipoConta.getId(), tipoConta.getNome());
+        }
+    }
 }

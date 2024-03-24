@@ -74,7 +74,7 @@ public class BancoDAOimpl implements GenericDAO {
     @Override
     public boolean criar(Object objeto) {
         PreparedStatement stmt = null;
-        String query = "INSER INTO banco(nome) VALUES(?)";
+        String query = "INSERT INTO banco(nome) VALUES(?)";
 
         try {
             stmt = this.conn.prepareStatement(query);

@@ -160,7 +160,7 @@ public class ClienteController {
 
         return this.criar(cliente);
     }
-    private void menuListarTodos() {
+    protected void menuListarTodos() {
         for (Cliente cliente: this.listarTodos()) {
             System.out.printf("""
                         Id: %d \s
