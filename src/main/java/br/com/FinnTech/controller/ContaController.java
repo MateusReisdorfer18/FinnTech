@@ -114,68 +114,52 @@ public class ContaController {
         return conta;
     }
 
-    public void chamarMenu(Scanner scan, ClienteController clienteController, BancoController bancoController, TipoContaController tipoContaController) {
-        int opcao;
+    private List<Pagamento> montarExtrato(Integer id) {
+        List<Pagamento> extrato = new ArrayList<>();
 
-        System.out.println("""
-                    Conta menu
-                    Selecione uma opção
-                    [1] Criar Conta \s
-                    [2] Listar todas as Contas \s
-                    [3] Buscar conta pelo id \s
-                    [4] Editar Conta \s
-                    [5] Excluir Conta \s
-                """);
-        opcao = scan.nextInt();
+        try {
+            ContaDAOimpl dao = new ContaDAOimpl();
 
-        switch (opcao) {
-            case 1:
-                boolean returnCadastro = this.menuCadastrar(scan, clienteController, bancoController, tipoContaController);
-
-                if(!returnCadastro) {
-                    System.out.println("Houve um problema ao criar conta");
-                    break;
-                }
-
-                System.out.println("Conta criado com sucesso");
-
-                break;
-            case 2:
-                this.menuListarTodos();
-
-                break;
-            case 3:
-                this.menuBuscarPorId(scan);
-
-                break;
-            case 4:
-                boolean returnAlterar = this.menuAlterar(scan, tipoContaController);
-
-                if(!returnAlterar) {
-                    System.out.println("Houve um problema ao editar conta");
-                    break;
-                }
-
-                System.out.println("Conta editada com sucesso");
-
-                break;
-            case 5:
-                boolean returnExcluir = this.menuExcluir(scan);
-
-                if(!returnExcluir) {
-                    System.out.println("Houve um problema ao excluir conta");
-                    break;
-                }
-
-                System.out.println("Conta excluida");
-
-                break;
-            default:
-                break;
+            extrato.addAll(dao.verExtrato(id));
+        } catch (Exception e) {
+            System.out.println("Problemas no controller ao carregar extrato da conta");
+            e.printStackTrace();
         }
+
+        return extrato;
     }
 
-    private boolean menuCadastrar(Scanner scan, ClienteController clienteController, BancoController bancoController, TipoContaController tipoContaController) {
+    public void verExtrato(Conta conta) {
+        for(Pagamento pagamento:this.montarExtrato(conta.getId())) {
+            Integer id = pagamento.getId();
+            String tipo = pagamento.getTipo().getTipo();
+            String nomeClienteRemetente = pagamento.getRemetente().getCliente().getNome();
+            Integer numeroContaRemetente = pagamento.getRemetente().getNumero();
+            String nomeClienteDestinatario = pagamento.getDestinatario().getCliente().getNome();
+            Integer numeroContaDestinatario = pagamento.getDestinatario().getNumero();
+            Double valor = pagamento.getValor();
+
+            System.out.printf("""
+                    Pagamento     \s
+                        Id: %d \s
+                        Tipo: %s \s
+                        Remetente: \s
+                            Nome: %s \s
+                            Numero: %d \s
+                        Destinatario : \s
+                            Nome: %s \s
+                            Numero: %d \s
+                        Valor: %f   \s
+                    """, id, tipo, nomeClienteRemetente, numeroContaRemetente, nomeClienteDestinatario, numeroContaDestinatario, valor);
+        }
+
+    }
+
+    protected void menuVerSaldo(Conta conta) {
+        System.out.printf("Saldo: R$%f", conta.getSaldo());
+    }
+
+    protected boolean menuCadastrar(Scanner scan, ClienteController clienteController, BancoController bancoController, TipoContaController tipoContaController) {
         int idCliente;
         Cliente cliente;
         int idTipo;
@@ -225,10 +209,11 @@ public class ContaController {
                 System.out.printf("Banco não encontrado com o id %d, digite novamente \n", idBanco);
         } while(banco == null);
 
-        Conta conta = new Conta(cliente, tipoConta, 0.00, 0.00, banco);
+        Conta conta = new Conta(cliente, tipoConta, 0.00, 10000.00, banco);
 
         return this.cadastrar(conta);
     }
+
     protected void menuListarTodos() {
         for(Conta conta:this.listarTodos()) {
             System.out.printf("""
@@ -242,33 +227,38 @@ public class ContaController {
                     """, conta.getId(), conta.getNumero(), conta.getTipo().getNome(), conta.getCliente().getNome(), conta.getSaldo(), conta.getLimite(), conta.getBanco().getNome());
         }
     }
-    private void menuBuscarPorId(Scanner scan) {
-        int idConta;
-        Conta conta;
 
-        do {
-            this.menuListarTodos();
+    protected boolean menuContaTransferir(Scanner scan, Conta remetente, Conta destinatario) {
+        boolean returnValidarValorPagamento;
+        boolean returnSaque;
+        boolean returnDeposito;
+        Double valor;
 
-            System.out.println("Digite o id da conta");
-            idConta = scan.nextInt();
+        System.out.println("Digite o valor do pagamento");
+        valor = scan.nextDouble();
 
-            conta = this.buscarPorId(idConta);
+        returnValidarValorPagamento = this.validarValorPagamento(remetente, valor);
 
-            if(conta == null)
-                System.out.printf("Conta não encontrada com o id %d, digite novamente \n", idConta);
-        } while (conta == null);
+        if(!returnValidarValorPagamento) {
+            if(valor <= 0)
+                System.out.println("Valor do pagamento tem que ser maior que R$0,00");
+            else
+                System.out.println("Saldo insufisciente para efetuar o pagamento");
 
-        System.out.printf("""
-                        Id: %d \s
-                        Numero: %d \s
-                        Tipo: %s \s
-                        Cliente: %s \s
-                        Saldo: %f \s
-                        Limite: %f \s
-                        Banco: %s
-                    """, conta.getId(), conta.getNumero(), conta.getTipo().getNome(), conta.getCliente().getNome(), conta.getSaldo(), conta.getLimite(), conta.getBanco().getNome());
+            return false;
+        }
+
+        returnSaque = this.sacar(valor, remetente.getId());
+        returnDeposito = this.depositar(valor, destinatario.getId());
+
+        if(!returnSaque || !returnDeposito) {
+            return false;
+        }
+
+        return true;
     }
-    private boolean menuAlterar(Scanner scan, TipoContaController tipoContaController) {
+
+    protected boolean menuAlterar(Scanner scan, TipoContaController tipoContaController) {
         int idConta;
         Conta conta;
         int idTipo;
@@ -302,13 +292,59 @@ public class ContaController {
 
         return this.alterar(conta);
     }
-    private boolean menuExcluir(Scanner scan) {
-        int idConta;
 
-        this.menuListarTodos();
-        System.out.println("Digite o id da conta que deseja excluir");
-        idConta = scan.nextInt();
+    protected boolean menuContaDeposito(Scanner scan, Conta conta) {
+        boolean returnDeposito;
+        Double valor;
 
-        return this.excluir(idConta);
+        do {
+            System.out.println("Digite o valor do deposito");
+            valor = scan.nextDouble();
+
+            if(valor <= 0)
+                System.out.println("O valor do pagamento tem que ser maior que R$0,00");
+        } while (valor <= 0);
+
+        returnDeposito = this.depositar(valor, conta.getId());
+
+        if(!returnDeposito)
+            return false;
+
+        return true;
+    }
+
+    protected boolean menuContaSaque(Scanner scan, Conta conta) {
+        boolean returnSaque;
+        Double valor;
+
+        do {
+            System.out.println("Digite o valor do saque");
+            valor = scan.nextDouble();
+
+            if(valor <= 0)
+                System.out.println("O valor do saque tem que ser maior que R$0,00");
+        } while (valor <= 0);
+
+        boolean returnValidarValorSaque = this.validarValorSaque(conta, valor);
+
+        if(!returnValidarValorSaque) {
+            System.out.println("O valor do saque é inválido, tente novamente");
+            return false;
+        }
+
+        returnSaque = this.sacar(valor, conta.getId());
+
+        if(!returnSaque)
+            return false;
+
+        return true;
+    }
+
+    protected boolean validarValorPagamento(Conta conta, Double valor) {
+        return valor > 0 && valor < conta.getSaldo() && valor < conta.getLimite();
+    }
+
+    private boolean validarValorSaque(Conta conta, Double valor) {
+        return valor < conta.getSaldo() && valor < conta.getLimite();
     }
 }

@@ -20,15 +20,12 @@ public class Main {
                         Bem vindo! \s
                         Selecione uma opção \s
                         [1] Cliente \s
-                        [2] Conta \s
                         [0] Sair \s
                     """);
             opcao = scan.nextInt();
 
             if(opcao == 1) {
-                clienteController.chamarMenu(scan, contaController, tipoPagamentoController, pagamentoController);
-            } else if (opcao == 2) {
-                contaController.chamarMenu(scan, clienteController, bancoController, tipoContaController);
+                clienteController.chamarMenu(scan, contaController, tipoPagamentoController, pagamentoController, clienteController, bancoController, tipoContaController);
             }
         } while(opcao != 0);
     }

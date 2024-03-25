@@ -6,8 +6,8 @@ public class TipoConta {
 
     public TipoConta() {}
 
-    public TipoConta(String nome) {
-        this.nome = nome;
+    public TipoConta(Integer id, String nome) {
+        this.id = id; this.nome = nome;
     }
 
     public void setId(Integer id) {

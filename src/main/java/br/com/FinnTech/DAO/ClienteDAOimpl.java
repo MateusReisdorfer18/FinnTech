@@ -19,7 +19,6 @@ public class ClienteDAOimpl implements GenericDAO {
     public ClienteDAOimpl() throws Exception {
         try {
             this.conn = ConnectionFactory.getConnection();
-            System.out.println("Conectado ao Banco");
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

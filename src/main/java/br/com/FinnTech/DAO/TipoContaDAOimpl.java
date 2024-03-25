@@ -31,7 +31,7 @@ public class TipoContaDAOimpl implements GenericDAO {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                TipoConta tipoConta = new TipoConta(rs.getString("nome"));
+                TipoConta tipoConta = new TipoConta(rs.getInt("id"), rs.getString("tipo"));
                 lista.add(tipoConta);
             }
         } catch (SQLException e) {
@@ -53,10 +53,12 @@ public class TipoContaDAOimpl implements GenericDAO {
 
         try {
             stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
             rs = stmt.executeQuery();
 
             if(rs.next()) {
-                tipoConta.setNome(rs.getString("nome"));
+                tipoConta.setId(rs.getInt("id"));
+                tipoConta.setNome(rs.getString("tipo"));
             }
         } catch (SQLException e) {
             System.out.println("Problemas na DAO ao buscar tipo da conta pelo id");
