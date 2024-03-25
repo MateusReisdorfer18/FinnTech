@@ -28,5 +28,7 @@ public class Main {
                 clienteController.chamarMenu(scan, contaController, tipoPagamentoController, pagamentoController, clienteController, bancoController, tipoContaController);
             }
         } while(opcao != 0);
+
+        System.out.println("Só um comentario pro poder arrumar o commit");
     }
 }
