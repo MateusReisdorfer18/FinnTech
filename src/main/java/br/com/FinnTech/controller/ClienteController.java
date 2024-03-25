@@ -4,6 +4,8 @@ import br.com.FinnTech.DAO.ClienteDAOimpl;
 import br.com.FinnTech.DAO.GenericDAO;
 import br.com.FinnTech.model.Cliente;
 import br.com.FinnTech.model.Conta;
+import br.com.FinnTech.model.Pagamento;
+import br.com.FinnTech.model.TipoPagamento;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.Objects;
 import java.util.Scanner;
 
 public class ClienteController {
+
     public ClienteController() {}
 
     private List<Cliente> listarTodos() {
@@ -98,7 +101,7 @@ public class ClienteController {
         return contas;
     }
 
-    public void chamarMenu(Scanner scan, ContaController contaController) {
+    public void chamarMenu(Scanner scan, ContaController contaController, TipoPagamentoController tipoPagamentoController, PagamentoController pagamentoController) {
         int opcao;
 
         System.out.println("""
@@ -161,7 +164,7 @@ public class ClienteController {
 
                 break;
             case 7:
-                this.menuEntrarNaConta(scan,contaController);
+                this.menuEntrarNaConta(scan,contaController, tipoPagamentoController, pagamentoController);
 
                 break;
             default:
@@ -187,6 +190,7 @@ public class ClienteController {
 
         return this.criar(cliente);
     }
+
     protected void menuListarTodos() {
         for (Cliente cliente: this.listarTodos()) {
             System.out.printf("""
@@ -197,6 +201,7 @@ public class ClienteController {
                     """, cliente.getId(), cliente.getNome(), cliente.getEmail(), cliente.getCpf());
         }
     }
+
     private void menuBuscarPorId(Scanner scan) {
         int idCliente;
         Cliente cliente;
@@ -218,6 +223,7 @@ public class ClienteController {
                     Cpf: %s
                 """, cliente.getId(), cliente.getNome(), cliente.getEmail(), cliente.getCpf());
     }
+
     private boolean menuEditar(Scanner scan) {
         int idCliente;
         int campos;
@@ -431,6 +437,7 @@ public class ClienteController {
 
         return this.alterar(cliente);
     }
+
     private boolean menuExcluir(Scanner scan) {
         int idCliente;
 
@@ -440,6 +447,7 @@ public class ClienteController {
 
         return this.excluir(idCliente);
     }
+
     private void menuListarContas(Scanner scan) {
         int idCliente;
 
@@ -460,7 +468,7 @@ public class ClienteController {
         }
     }
 
-    private void menuEntrarNaConta(Scanner scan, ContaController contaController) {
+    private void menuEntrarNaConta(Scanner scan, ContaController contaController, TipoPagamentoController tipoPagamentoController, PagamentoController pagamentoController) {
         int idCliente;
         Cliente cliente;
         int idConta;
@@ -498,9 +506,9 @@ public class ClienteController {
                 System.out.printf("Conta não encontrada com o id %d, digite novamente \n", idConta);
         } while(conta == null);
 
-        boolean returnAcao = this.acoesConta(scan, idConta, contaController);
+        boolean returnMenuConta = this.menuConta(scan, idConta, contaController, tipoPagamentoController, pagamentoController);
 
-        if(!returnAcao) {
+        if(!returnMenuConta) {
             System.out.println("Houve um problema em finalizar a ação");
             return;
         }
@@ -508,37 +516,173 @@ public class ClienteController {
         System.out.println("Ação finalizada com sucesso");
     }
 
-    private boolean acoesConta(Scanner scan, Integer id, ContaController contaController) {
+    private boolean menuConta(Scanner scan, Integer idConta, ContaController contaController, TipoPagamentoController tipoPagamentoController, PagamentoController pagamentoController) {
         int opcao;
         Double valor;
+        Conta conta = contaController.buscarPorId(idConta);
+        boolean returnValidarValorPagamento;
+        boolean returnFinal = false;
 
         System.out.println("""
                     Selecione uma opção \s
                     [1] Depositar \s
                     [2] Sacar \s
                     [3] Efetuar Pagamento \s
-                    [4] Excluir Conta
+                    [4] Excluir Conta \s
+                    [5] Ver extrato
                 """);
         opcao = scan.nextInt();
 
         switch (opcao) {
             case 1:
+                boolean returnDeposito;
+
                 System.out.println("Digite o valor do deposito");
                 valor = scan.nextDouble();
 
-                return contaController.depositar(valor, id);
+                returnValidarValorPagamento = this.validarValorPagamento(conta, valor);
+
+                if(!returnValidarValorPagamento) {
+                    if(valor <= 0)
+                        System.out.println("Valor do pagamento tem que ser maior que R$0,00");
+                    else
+                        System.out.println("Saldo insufisciente para efetuar o pagamento");
+
+                    break;
+                }
+
+                returnDeposito = contaController.depositar(valor, idConta);
+
+                if(!returnDeposito) {
+                    System.out.println("Houve um problema ao efetuar o deposito, tente novamento");
+                    break;
+                }
+
+                System.out.println("Deposito efetuado com sucesso");
+
+                returnFinal = true;
+                break;
             case 2:
+                boolean returnSaque;
+
                 System.out.println("Digite o valor do saque");
                 valor = scan.nextDouble();
 
-                return contaController.sacar(valor, id);
+                returnValidarValorPagamento = this.validarValorPagamento(conta, valor);
+
+                if(!returnValidarValorPagamento) {
+                    if(valor <= 0)
+                        System.out.println("Valor do pagamento tem que ser maior que R$0,00");
+                    else
+                        System.out.println("Saldo insufisciente para efetuar o pagamento");
+
+                    break;
+                }
+
+                returnSaque = contaController.sacar(valor, idConta);
+
+                if (!returnSaque) {
+                    System.out.println("Houve um problema ao efetuar o saque, tente novamente");
+                    break;
+                }
+
+                System.out.println("Saque efetuado com sucesso");
+
+                returnFinal = true;
+                break;
             case 3:
-                System.out.println("Olá, está parte ainda não está pronta");
-                return false;
+                boolean returnEfetuarPagamento = this.efetuarPagamento(scan, contaController, conta, tipoPagamentoController, pagamentoController);
+
+                if(!returnEfetuarPagamento) {
+                    System.out.println("Houve um problema ao efetuar pagamento, tente novamente");
+                    break;
+                }
+
+                System.out.println("Pagamento efetuado com sucesso");
+
+                returnFinal = true;
+                break;
             case 4:
-                return contaController.excluir(id);
+                boolean returnExcluir = contaController.excluir(idConta);
+
+                if(!returnExcluir) {
+                    System.out.println("Houve um problema ao excluir a conta");
+                    break;
+                }
+
+                System.out.println("Conta excluida");
+
+                returnFinal = true;
+                break;
             default:
-                return false;
+                System.out.println("Opção inválida");
+                returnFinal = false;
+                break;
         }
+
+        return returnFinal;
+    }
+
+    private boolean validarValorPagamento(Conta conta, Double valor) {
+        return valor > 0 && valor > conta.getSaldo() && valor < conta.getLimite();
+    }
+
+    private boolean efetuarPagamento(Scanner scan, ContaController contaController, Conta remetente, TipoPagamentoController tipoPagamentoController, PagamentoController pagamentoController) {
+        int idTipoPagamento;
+        TipoPagamento tipoPagamento;
+        Integer numeroDestinatario;
+        Conta destinatario;
+        boolean returnValidarValorPagamento;
+        Pagamento pagamento = new Pagamento();
+        Double valor;
+
+        do {
+            for(TipoPagamento tipoPagamentoParans:tipoPagamentoController.listarTodos()) {
+                System.out.println("""
+                                    Selecione o tipo do pagamento \s
+                                    [1] Pix \s
+                                    [2] Crédito \s
+                                    [3] Débito
+                                """);
+            }
+            idTipoPagamento = scan.nextInt();
+
+            tipoPagamento = tipoPagamentoController.buscarPorId(idTipoPagamento);
+
+            if(tipoPagamento == null)
+                System.out.println("Tipo de pagamento inválido, digite novamente");
+        } while(tipoPagamento == null);
+
+        do {
+            contaController.menuListarTodos();
+
+            System.out.println("Digite o número da conta do destinatario");
+            numeroDestinatario = scan.nextInt();
+
+            destinatario = contaController.buscarPorNumero(numeroDestinatario);
+
+            if(destinatario == null)
+                System.out.printf("Conta não encontrada com o número %d, digite novamente \n", numeroDestinatario);
+        } while(destinatario == null);
+
+        do {
+            System.out.println("Digite o valor do pagamento");
+            valor = scan.nextDouble();
+
+            returnValidarValorPagamento = this.validarValorPagamento(remetente, valor);
+
+            if(valor <= 0)
+                System.out.println("O valor do pagamento tem que ser maior que R$0,00");
+        } while (!returnValidarValorPagamento);
+
+        pagamento.setTipo(tipoPagamento);
+        pagamento.setRemetente(remetente);
+        pagamento.setDestinatario(destinatario);
+        pagamento.setValor(valor);
+
+        contaController.sacar(valor, remetente.getId());
+        contaController.depositar(valor, destinatario.getId());
+
+        return pagamentoController.cadastrar(pagamento);
     }
 }

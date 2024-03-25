@@ -60,4 +60,12 @@ public class Cliente {
     public void setContas(List<Conta> extrato) {
         this.contas = extrato;
     }
+
+    public void vincularConta(Conta conta) {
+        this.contas.add(conta);
+    }
+
+    public void desvincularConta(Conta conta) {
+        this.contas.remove(conta);
+    }
 }

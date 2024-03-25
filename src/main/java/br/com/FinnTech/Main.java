@@ -1,9 +1,6 @@
 package br.com.FinnTech;
 
-import br.com.FinnTech.controller.BancoController;
-import br.com.FinnTech.controller.ClienteController;
-import br.com.FinnTech.controller.ContaController;
-import br.com.FinnTech.controller.TipoContaController;
+import br.com.FinnTech.controller.*;
 
 import java.util.Scanner;
 
@@ -14,6 +11,8 @@ public class Main {
         ClienteController clienteController = new ClienteController();
         TipoContaController tipoContaController = new TipoContaController();
         BancoController bancoController = new BancoController();
+        TipoPagamentoController tipoPagamentoController = new TipoPagamentoController();
+        PagamentoController pagamentoController = new PagamentoController();
         int opcao;
 
         do {
@@ -27,7 +26,7 @@ public class Main {
             opcao = scan.nextInt();
 
             if(opcao == 1) {
-                clienteController.chamarMenu(scan);
+                clienteController.chamarMenu(scan, contaController, tipoPagamentoController, pagamentoController);
             } else if (opcao == 2) {
                 contaController.chamarMenu(scan, clienteController, bancoController, tipoContaController);
             }

@@ -3,10 +3,7 @@ package br.com.FinnTech.controller;
 import br.com.FinnTech.DAO.ClienteDAOimpl;
 import br.com.FinnTech.DAO.ContaDAOimpl;
 import br.com.FinnTech.DAO.GenericDAO;
-import br.com.FinnTech.model.Banco;
-import br.com.FinnTech.model.Cliente;
-import br.com.FinnTech.model.Conta;
-import br.com.FinnTech.model.TipoConta;
+import br.com.FinnTech.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +98,20 @@ public class ContaController {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public Conta buscarPorNumero(Integer numero){
+        Conta conta = new Conta();
+
+        try {
+            ContaDAOimpl dao = new ContaDAOimpl();
+            conta = dao.buscarPorNumero(numero);
+        } catch (Exception e) {
+            System.out.println("Problemas no controller ao buscar conta pelo numero");
+            e.printStackTrace();
+        }
+
+        return conta;
     }
 
     public void chamarMenu(Scanner scan, ClienteController clienteController, BancoController bancoController, TipoContaController tipoContaController) {
@@ -218,7 +229,7 @@ public class ContaController {
 
         return this.cadastrar(conta);
     }
-    private void menuListarTodos() {
+    protected void menuListarTodos() {
         for(Conta conta:this.listarTodos()) {
             System.out.printf("""
                         Id: %d \s

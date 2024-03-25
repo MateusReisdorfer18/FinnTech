@@ -1,12 +1,7 @@
 package br.com.FinnTech.DAO;
 
-import br.com.FinnTech.controller.BancoController;
-import br.com.FinnTech.controller.ClienteController;
-import br.com.FinnTech.controller.TipoContaController;
-import br.com.FinnTech.model.Banco;
-import br.com.FinnTech.model.Cliente;
-import br.com.FinnTech.model.Conta;
-import br.com.FinnTech.model.TipoConta;
+import br.com.FinnTech.controller.*;
+import br.com.FinnTech.model.*;
 import br.com.FinnTech.util.ConnectionFactory;
 
 import java.sql.*;
@@ -19,6 +14,8 @@ public class ContaDAOimpl implements GenericDAO {
     private ClienteController clienteController = new ClienteController();
     private BancoController bancoController = new BancoController();
     private TipoContaController tipoContaController = new TipoContaController();
+    private ContaController contaController = new ContaController();
+    private TipoPagamentoController tipoPagamentoController = new TipoPagamentoController();
 
     public ContaDAOimpl() {
         try {
@@ -204,14 +201,29 @@ public class ContaDAOimpl implements GenericDAO {
         return true;
     }
 
-    public List<Object> verExtrato() {
-        List<Object> lista = new ArrayList<>();
+    public List<Pagamento> verExtrato(Integer id) {
+        List<Pagamento> lista = new ArrayList<>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String query = "SELECT * FROM pagamento WHERE remetente = ?";
 
         try {
             stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            while(rs.next()) {
+                Pagamento pagamento = new Pagamento();
+                pagamento.setId(rs.getInt("id"));
+                Conta remetente = contaController.buscarPorId(rs.getInt("remetente"));
+                pagamento.setRemetente(remetente);
+                Conta destinatario = contaController.buscarPorId(rs.getInt("destinatario"));
+                pagamento.setDestinatario(destinatario);
+                TipoPagamento tipoPagamento = tipoPagamentoController.buscarPorId(rs.getInt("tipo"));
+                pagamento.setTipo(tipoPagamento);
+                pagamento.setValor(rs.getDouble("valor"));
+                lista.add(pagamento);
+            }
         } catch (SQLException e) {
             System.out.println("Problemas na DAO ao ver extrato");
             e.printStackTrace();
@@ -220,6 +232,39 @@ public class ContaDAOimpl implements GenericDAO {
         }
 
         return lista;
+    }
+
+    public Conta buscarPorNumero(Integer numero) {
+        Conta conta = new Conta();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String query = "SELECT * FROM conta WHERE numero = ?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, numero);
+            rs = stmt.executeQuery();
+
+            if(rs.next()) {
+                conta.setId(rs.getInt("id"));
+                conta.setNumero(rs.getInt("numero"));
+                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"));
+                conta.setTipo(tipoConta);
+                Cliente cliente = clienteController.buscarPorId(rs.getInt("cliente"));
+                conta.setCliente(cliente);
+                conta.setSaldo(rs.getDouble("saldo"));
+                conta.setLimite(rs.getDouble("limite"));
+                Banco banco = bancoController.buscarPorId(rs.getInt("banco"));
+                conta.setBanco(banco);
+            }
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao buscar conta pelo numero");
+            e.printStackTrace();
+        } finally {
+            this.fecharConexao(this.conn, stmt, rs);
+        }
+
+        return conta;
     }
 
     private Double verSaldo(Integer id) {

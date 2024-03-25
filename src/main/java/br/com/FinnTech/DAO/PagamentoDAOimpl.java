@@ -1,8 +1,10 @@
 package br.com.FinnTech.DAO;
 
 import br.com.FinnTech.controller.ContaController;
+import br.com.FinnTech.controller.TipoPagamentoController;
 import br.com.FinnTech.model.Conta;
 import br.com.FinnTech.model.Pagamento;
+import br.com.FinnTech.model.TipoPagamento;
 import br.com.FinnTech.util.ConnectionFactory;
 
 import java.sql.*;
@@ -12,6 +14,7 @@ import java.util.List;
 public class PagamentoDAOimpl implements GenericDAO {
     private Connection conn;
     private ContaController contaController = new ContaController();
+    private TipoPagamentoController tipoPagamentoController = new TipoPagamentoController();
     public PagamentoDAOimpl() {
         try {
             this.conn = ConnectionFactory.getConnection();
@@ -34,7 +37,8 @@ public class PagamentoDAOimpl implements GenericDAO {
             while(rs.next()) {
                 Pagamento pagamento = new Pagamento();
                 pagamento.setId(rs.getInt("id"));
-                pagamento.setTipo(rs.getInt("tipo"));
+                TipoPagamento tipoPagamento = tipoPagamentoController.buscarPorId(rs.getInt("tipo"));
+                pagamento.setTipo(tipoPagamento);
                 Conta destinatario = contaController.buscarPorId(rs.getInt("destinatario"));
                 pagamento.setDestinatario(destinatario);
                 Conta remetente = contaController.buscarPorId(rs.getInt("remetente"));
@@ -67,7 +71,8 @@ public class PagamentoDAOimpl implements GenericDAO {
 
             if(rs.next()) {
                 pagamento.setId(rs.getInt("id"));
-                pagamento.setTipo(rs.getInt("tipo"));
+                TipoPagamento tipoPagamento = tipoPagamentoController.buscarPorId(rs.getInt("tipo"));
+                pagamento.setTipo(tipoPagamento);
                 Conta destinatario = contaController.buscarPorId(rs.getInt("destinatario"));
                 pagamento.setDestinatario(destinatario);
                 Conta remetente = contaController.buscarPorId(rs.getInt("remetente"));
@@ -92,7 +97,7 @@ public class PagamentoDAOimpl implements GenericDAO {
         try {
             stmt = this.conn.prepareStatement(query);
             Pagamento pagamento = (Pagamento) objeto;
-            stmt.setInt(1, pagamento.getTipo());
+            stmt.setInt(1, pagamento.getTipo().getId());
             stmt.setInt(2, pagamento.getRemetente().getId());
             stmt.setInt(3, pagamento.getDestinatario().getId());
             stmt.setDouble(4, pagamento.getValor());
@@ -116,7 +121,7 @@ public class PagamentoDAOimpl implements GenericDAO {
         try {
             stmt = this.conn.prepareStatement(query);
             Pagamento pagamento = (Pagamento) objeto;
-            stmt.setInt(1, pagamento.getTipo());
+            stmt.setInt(1, pagamento.getTipo().getId());
             stmt.setInt(2, pagamento.getRemetente().getId());
             stmt.setInt(3, pagamento.getDestinatario().getId());
             stmt.setDouble(4, pagamento.getValor());

@@ -2,7 +2,9 @@ package br.com.FinnTech.controller;
 
 import br.com.FinnTech.DAO.GenericDAO;
 import br.com.FinnTech.DAO.PagamentoDAOimpl;
+import br.com.FinnTech.model.Conta;
 import br.com.FinnTech.model.Pagamento;
+import br.com.FinnTech.model.TipoPagamento;
 
 import java.util.ArrayList;
 import java.util.List;

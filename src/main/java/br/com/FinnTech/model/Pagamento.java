@@ -2,7 +2,7 @@ package br.com.FinnTech.model;
 
 public class Pagamento {
     private Integer id;
-    private Integer tipo;
+    private TipoPagamento tipo;
     private Conta remetente;
     private Conta destinatario;
     private Double valor;
@@ -10,7 +10,7 @@ public class Pagamento {
     public Pagamento() {
     }
 
-    public Pagamento(Integer tipo, Conta remetente, Conta destinatario, Double valor) {
+    public Pagamento(TipoPagamento tipo, Conta remetente, Conta destinatario, Double valor) {
         this.tipo = tipo;
         this.remetente = remetente;
         this.destinatario = destinatario;
@@ -25,11 +25,11 @@ public class Pagamento {
         this.id = id;
     }
 
-    public Integer getTipo() {
+    public TipoPagamento getTipo() {
         return this.tipo;
     }
 
-    public void setTipo(Integer tipo) {
+    public void setTipo(TipoPagamento tipo) {
         this.tipo = tipo;
     }
 
