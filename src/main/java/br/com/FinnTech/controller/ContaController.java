@@ -79,6 +79,30 @@ public class ContaController {
         }
     }
 
+    public boolean depositar(Double valor, Integer id) {
+        try {
+            ContaDAOimpl dao = new ContaDAOimpl();
+            dao.depositar(valor, id);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Problemas no controller ao efetuar deposito");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean sacar (Double valor, Integer id) {
+        try {
+            ContaDAOimpl dao = new ContaDAOimpl();
+            dao.sacar(valor, id);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Problemas no controller ao efetuar saque");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public void chamarMenu(Scanner scan, ClienteController clienteController, BancoController bancoController, TipoContaController tipoContaController) {
         int opcao;
 
@@ -89,7 +113,7 @@ public class ContaController {
                     [2] Listar todas as Contas \s
                     [3] Buscar conta pelo id \s
                     [4] Editar Conta \s
-                    [5] Excluir Conta
+                    [5] Excluir Conta \s
                 """);
         opcao = scan.nextInt();
 

@@ -80,7 +80,7 @@ public class ContaDAOimpl implements GenericDAO {
                 conta.setId(rs.getInt("id"));
                 Cliente cliente = clienteController.buscarPorId(rs.getInt("cliente"));
                 conta.setCliente(cliente);
-                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"))
+                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"));
                 conta.setTipo(tipoConta);
                 conta.setNumero(rs.getInt("numero"));
                 Banco banco = bancoController.buscarPorId(rs.getInt("banco"));
@@ -132,7 +132,7 @@ public class ContaDAOimpl implements GenericDAO {
         try {
             stmt = this.conn.prepareStatement(query);
             Conta conta = (Conta) objeto;
-            stmt.setInt(1, conta.getTipo().getId())
+            stmt.setInt(1, conta.getTipo().getId());
             stmt.execute();
         } catch (SQLException e) {
             System.out.println("Problemas na DAO ao editar conta");
@@ -163,6 +163,87 @@ public class ContaDAOimpl implements GenericDAO {
         }
 
         return true;
+    }
+
+    public boolean depositar(Double valor, Integer id) {
+        PreparedStatement stmt = null;
+        String query = "UPDATE conta SET saldo=? WHERE id=?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setDouble(1, valor);
+            stmt.setInt(2, id);
+            stmt.execute();
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao fazer deposito");
+            e.printStackTrace();
+            return false;
+        } finally {
+            this.fecharConexao(this.conn, stmt, null);
+        }
+
+        return true;
+    }
+
+    public boolean sacar(Double valor, Integer id) {
+        PreparedStatement stmt = null;
+        String query = "UPDATE conta SET saldo=? WHERE id=?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            Double saldoAtual = this.verSaldo(id) - valor;
+            stmt.setDouble(1, saldoAtual);
+            stmt.setInt(2, id);
+            stmt.execute();
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao efetuar saque");
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public List<Object> verExtrato() {
+        List<Object> lista = new ArrayList<>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String query = "SELECT * FROM pagamento WHERE remetente = ?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao ver extrato");
+            e.printStackTrace();
+        } finally {
+            this.fecharConexao(this.conn, stmt, rs);
+        }
+
+        return lista;
+    }
+
+    private Double verSaldo(Integer id) {
+        Double valor = 0.0;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String query = "SELECT saldo FROM conta WHERE id=?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            if(rs.next()) {
+                valor = rs.getDouble("saldo");
+            }
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao consultar salod");
+            e.printStackTrace();
+        } finally {
+            this.fecharConexao(this.conn, stmt, rs);
+        }
+
+        return valor;
     }
 
     private Integer gerarNumero() {

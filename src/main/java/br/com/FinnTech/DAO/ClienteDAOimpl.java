@@ -1,6 +1,11 @@
 package br.com.FinnTech.DAO;
 
+import br.com.FinnTech.controller.BancoController;
+import br.com.FinnTech.controller.TipoContaController;
+import br.com.FinnTech.model.Banco;
 import br.com.FinnTech.model.Cliente;
+import br.com.FinnTech.model.Conta;
+import br.com.FinnTech.model.TipoConta;
 import br.com.FinnTech.util.ConnectionFactory;
 
 import java.sql.*;
@@ -9,7 +14,8 @@ import java.util.List;
 
 public class ClienteDAOimpl implements GenericDAO {
     private Connection conn;
-
+    private TipoContaController tipoContaController = new TipoContaController();
+    private BancoController bancoController = new BancoController();
     public ClienteDAOimpl() throws Exception {
         try {
             this.conn = ConnectionFactory.getConnection();
@@ -143,6 +149,39 @@ public class ClienteDAOimpl implements GenericDAO {
         }
 
         return true;
+    }
+
+    public List<Object> listarContas(Integer id) {
+        List<Object> lista = new ArrayList<>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        String query = "SELECT * FROM conta WHERE cliente=?";
+
+        try {
+            stmt = this.conn.prepareStatement(query);
+            stmt.setInt(1, id);
+            rs = stmt.executeQuery();
+
+            while(rs.next()) {
+                Conta conta = new Conta();
+                conta.setId(rs.getInt("id"));
+                TipoConta tipoConta = tipoContaController.buscarPorId(rs.getInt("tipo"));
+                conta.setTipo(tipoConta);
+                conta.setNumero(rs.getInt("numero"));
+                conta.setSaldo(rs.getDouble("saldo"));
+                conta.setLimite(rs.getDouble("limite"));
+                Banco banco = bancoController.buscarPorId(rs.getInt("banco"));
+                conta.setBanco(banco);
+                lista.add(conta);
+            }
+        } catch (SQLException e) {
+            System.out.println("Problemas na DAO ao listar contas do cliente");
+            e.printStackTrace();
+        } finally {
+            this.fecharConexao(this.conn, stmt, rs);
+        }
+
+        return lista;
     }
 
     private void fecharConexao(Connection conn, Statement stmt, ResultSet rs) {

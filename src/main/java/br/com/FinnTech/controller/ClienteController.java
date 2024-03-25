@@ -3,6 +3,7 @@ package br.com.FinnTech.controller;
 import br.com.FinnTech.DAO.ClienteDAOimpl;
 import br.com.FinnTech.DAO.GenericDAO;
 import br.com.FinnTech.model.Cliente;
+import br.com.FinnTech.model.Conta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +82,23 @@ public class ClienteController {
         }
     }
 
-    public void chamarMenu(Scanner scan) {
+    private List<Conta> listarContas(Integer id) {
+        List<Conta> contas = new ArrayList<>();
+
+        try {
+            ClienteDAOimpl dao = new ClienteDAOimpl();
+            for(Object objeto:dao.listarContas(id)) {
+                contas.add((Conta) objeto);
+            }
+        } catch (Exception e) {
+            System.out.println("Problemas no controller ao listar contas do cliente");
+            e.printStackTrace();
+        }
+
+        return contas;
+    }
+
+    public void chamarMenu(Scanner scan, ContaController contaController) {
         int opcao;
 
         System.out.println("""
@@ -91,6 +108,8 @@ public class ClienteController {
                     [3] Buscar Cliente pelo id \s
                     [4] Editar Cliente \s
                     [5] Excluir Cliente \s
+                    [6] Ver Contas do Cliente \s
+                    [7] Entrar em uma Conta
                 """);
 
         opcao = scan.nextInt();
@@ -135,6 +154,14 @@ public class ClienteController {
                 }
 
                 System.out.println("Cliente excluido com sucesso");
+
+                break;
+            case 6:
+                this.menuListarContas(scan);
+
+                break;
+            case 7:
+                this.menuEntrarNaConta(scan,contaController);
 
                 break;
             default:
@@ -412,5 +439,106 @@ public class ClienteController {
         idCliente = scan.nextInt();
 
         return this.excluir(idCliente);
+    }
+    private void menuListarContas(Scanner scan) {
+        int idCliente;
+
+        this.menuListarTodos();
+
+        System.out.println("Digite o id do cliente que deseja visualizar contas");
+        idCliente = scan.nextInt();
+
+        for(Conta conta:this.listarContas(idCliente)) {
+            System.out.printf("""
+                        Id: %d \s
+                        Numero: %d \s
+                        Tipo: %s \s
+                        Saldo: %f \s
+                        Limite: %f \s
+                        Banco: %s
+                    """, conta.getId(), conta.getNumero(), conta.getTipo().getNome(), conta.getSaldo(), conta.getLimite(), conta.getBanco().getNome());
+        }
+    }
+
+    private void menuEntrarNaConta(Scanner scan, ContaController contaController) {
+        int idCliente;
+        Cliente cliente;
+        int idConta;
+        Conta conta;
+
+        do {
+            this.menuListarTodos();
+
+            System.out.println("Digite o id do cliente que deseja acessar uma conta");
+            idCliente = scan.nextInt();
+
+            cliente = this.buscarPorId(idCliente);
+
+            if(cliente == null)
+                System.out.printf("Cliente não encontrado com o id %d, digite novamente \n", idCliente);
+        } while(cliente == null);
+
+        do {
+            for(Conta contaParams:this.listarContas(idCliente)) {
+                System.out.printf("""
+                            Id: %d \s
+                            Numero: %d \s
+                            Saldo: %f \s
+                            Limite: %f \s
+                            Banco: %s \s
+                        """, contaParams.getId(), contaParams.getNumero(), contaParams.getSaldo(), contaParams.getLimite(), contaParams.getBanco().getNome());
+            }
+
+            System.out.println("Digite o id da conta que deseja acessar");
+            idConta = scan.nextInt();
+
+            conta = contaController.buscarPorId(idConta);
+
+            if(conta == null)
+                System.out.printf("Conta não encontrada com o id %d, digite novamente \n", idConta);
+        } while(conta == null);
+
+        boolean returnAcao = this.acoesConta(scan, idConta, contaController);
+
+        if(!returnAcao) {
+            System.out.println("Houve um problema em finalizar a ação");
+            return;
+        }
+
+        System.out.println("Ação finalizada com sucesso");
+    }
+
+    private boolean acoesConta(Scanner scan, Integer id, ContaController contaController) {
+        int opcao;
+        Double valor;
+
+        System.out.println("""
+                    Selecione uma opção \s
+                    [1] Depositar \s
+                    [2] Sacar \s
+                    [3] Efetuar Pagamento \s
+                    [4] Excluir Conta
+                """);
+        opcao = scan.nextInt();
+
+        switch (opcao) {
+            case 1:
+                System.out.println("Digite o valor do deposito");
+                valor = scan.nextDouble();
+
+                return contaController.depositar(valor, id);
+            case 2:
+                System.out.println("Digite o valor do saque");
+                valor = scan.nextDouble();
+
+                return contaController.sacar(valor, id);
+            case 3:
+                System.out.println("Olá, está parte ainda não está pronta");
+                return false;
+            case 4:
+                return contaController.excluir(id);
+            default:
+                return false;
+        }
     }
 }
